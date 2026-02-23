@@ -1,5 +1,7 @@
 # Pipeline Forecast
 
+![Pipeline Forecast Architecture](docs/model-overview.png)
+
 Business-day sales pipeline forecasting prototype with:
 - competing outcomes (`won`, `lost`, `censored`)
 - age-based conversion kernel estimation
@@ -158,6 +160,11 @@ This enables both:
   Generated DuckDB, CSVs, and figures.
 
 ## Run
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 1. Generate data + forecast outputs:
 ```bash
