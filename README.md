@@ -1,6 +1,7 @@
 # Pipeline Forecast
 
 ![Pipeline Forecast Architecture](docs/model-overview.png)
+_Current example chart with front-loaded bimodal conversion kernel behavior (peaks around ~5 and ~15 business days)._
 
 Business-day sales pipeline forecasting prototype with:
 - competing outcomes (`won`, `lost`, `censored`)
