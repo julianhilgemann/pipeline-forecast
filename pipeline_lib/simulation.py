@@ -62,6 +62,19 @@ def _clip_prob(v: float, low: float = 0.01, high: float = 0.99) -> float:
     return float(min(high, max(low, v)))
 
 
+def _sample_bimodal_ttc(rng: np.random.Generator) -> float:
+    """
+    Sample base time-to-close with front-loaded bimodality near ~5 and ~15 business days.
+    A small tail component preserves realistic late closes.
+    """
+    comp = int(rng.choice([0, 1, 2], p=[0.48, 0.40, 0.12]))
+    if comp == 0:
+        return float(rng.normal(loc=4.0, scale=1.1))
+    if comp == 1:
+        return float(rng.normal(loc=12.0, scale=1.8))
+    return float(8.0 + rng.gamma(shape=2.0, scale=4.6))
+
+
 def simulate_events(
     opp: pd.DataFrame, cal: pd.DataFrame, regime_switch_biz_idx: int, rng: np.random.Generator
 ) -> pd.DataFrame:
@@ -77,8 +90,8 @@ def simulate_events(
     ch_close_adj = {"Inbound": 0.04, "Outbound": -0.03, "Partner": 0.01}
     seg_win_adj = {"SMB": -0.02, "MidMarket": 0.03, "Enterprise": 0.08}
     ch_win_adj = {"Inbound": 0.06, "Outbound": -0.04, "Partner": 0.02}
-    seg_age_shift = {"SMB": 0.0, "MidMarket": 3.0, "Enterprise": 8.0}
-    ch_age_shift = {"Inbound": -1.0, "Outbound": 2.0, "Partner": 1.0}
+    seg_age_shift = {"SMB": 0.0, "MidMarket": 1.4, "Enterprise": 3.0}
+    ch_age_shift = {"Inbound": -0.5, "Outbound": 0.8, "Partner": 0.3}
 
     rows: list[dict] = []
     for r in opp.itertuples(index=False):
@@ -102,11 +115,12 @@ def simulate_events(
             )
             continue
 
-        raw_ttc = rng.gamma(shape=2.4, scale=6.0)
+        raw_ttc = _sample_bimodal_ttc(rng)
         ttc = int(round(raw_ttc + seg_age_shift[r.segment] + ch_age_shift[r.channel]))
         ttc = max(1, ttc)
         if post_regime:
-            ttc = int(round(ttc * 1.35 + rng.integers(1, 5)))
+            # Keep a moderate post-regime slowdown while preserving early bimodality.
+            ttc = int(round(ttc * 1.08 + rng.integers(0, 3)))
             ttc = max(1, ttc)
 
         closed_idx = created_idx + ttc

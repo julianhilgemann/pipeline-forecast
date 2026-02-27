@@ -10,7 +10,12 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import FormatStrFormatter, MaxNLocator
 
 from .styling import add_horizontal_inset_scale, style_panel
-from .transforms import build_arrivals_surface, smooth_matrix, smooth_series
+from .transforms import (
+    build_arrivals_surface,
+    overflow_bucket_display,
+    smooth_matrix,
+    smooth_series,
+)
 
 
 def create_figure(
@@ -62,6 +67,13 @@ def create_figure(
         age = int(r.age_biz_days)
         if 0 <= age < len(active_cnt):
             active_cnt[age] = float(r.active_count)
+    overflow_age = int(age_axis[-1]) if age_axis.size else 0
+    active_cnt_display, active_cnt_xlim, overflow_clipped = overflow_bucket_display(
+        active_cnt,
+        overflow_index=overflow_age,
+        pad_ratio=1.15,
+    )
+    overflow_actual = float(active_cnt[overflow_age]) if age_axis.size else 0.0
     stock_total_by_age = stock_surface.sum(axis=1)
     arrivals_vec = arrivals_fc.sort_values("day_offset")["forecast_arrivals"].to_numpy(dtype=float)[:horizon]
     arrivals_total_by_origin = arrivals_surface.sum(axis=1)
@@ -169,9 +181,33 @@ def create_figure(
         title_size=9,
         grid_axis="x",
     )
-    ax_stock_left.barh(age_axis, active_cnt, height=0.86, color=colors["stock"], alpha=0.82, edgecolor="none")
+    bars = ax_stock_left.barh(
+        age_axis,
+        active_cnt_display,
+        height=0.86,
+        color=colors["stock"],
+        alpha=0.82,
+        edgecolor="none",
+    )
+    if overflow_clipped and age_axis.size:
+        bars[overflow_age].set_edgecolor(colors["muted"])
+        bars[overflow_age].set_linewidth(0.8)
+        bars[overflow_age].set_hatch("//")
+        y_frac = (overflow_age + 0.5) / max(1, len(age_axis))
+        ax_stock_left.text(
+            0.03,
+            y_frac,
+            f"{overflow_age}+ pooled: {int(round(overflow_actual))}",
+            transform=ax_stock_left.transAxes,
+            ha="left",
+            va="center",
+            fontsize=6,
+            color=colors["muted"],
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.75, "pad": 1.2},
+        )
     ax_stock_left.set_xlabel("Open opps [count]", fontsize=8)
     ax_stock_left.set_ylabel("Age [bd]", fontsize=8)
+    ax_stock_left.set_xlim(0.0, active_cnt_xlim)
     ax_stock_left.invert_xaxis()
     ax_stock_left.set_ylim(ax_stock_heat.get_ylim())
     ax_stock_left.tick_params(axis="y", labelleft=False)

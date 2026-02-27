@@ -57,3 +57,30 @@ def smooth_matrix(values: np.ndarray, passes: int = 1) -> np.ndarray:
             + padded[2:, 2:]
         ) / 16.0
     return out
+
+
+def overflow_bucket_display(
+    values: np.ndarray,
+    overflow_index: int | None = None,
+    pad_ratio: float = 1.15,
+) -> tuple[np.ndarray, float, bool]:
+    arr = np.asarray(values, dtype=float).copy()
+    if arr.size == 0:
+        return arr, 1.0, False
+
+    idx = int(arr.size - 1 if overflow_index is None else overflow_index)
+    idx = max(0, min(idx, arr.size - 1))
+
+    non_overflow = np.delete(arr, idx)
+    non_overflow_pos = non_overflow[non_overflow > 0]
+    if non_overflow_pos.size > 0:
+        x_cap = float(non_overflow_pos.max()) * max(1.0, pad_ratio)
+    else:
+        x_cap = float(arr.max()) if float(arr.max()) > 0 else 1.0
+
+    x_cap = max(1.0, x_cap)
+    clipped = False
+    if arr[idx] > x_cap:
+        arr[idx] = x_cap
+        clipped = True
+    return arr, x_cap, clipped

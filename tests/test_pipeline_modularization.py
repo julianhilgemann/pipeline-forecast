@@ -11,7 +11,7 @@ import pandas as pd
 from pipeline_lib import Config, run_pipeline
 from pipeline_lib.calendar import build_calendar, us_holidays_2025_2026
 from pipeline_lib.overview.io import load_inputs
-from pipeline_lib.overview.transforms import smooth_matrix, smooth_series
+from pipeline_lib.overview.transforms import overflow_bucket_display, smooth_matrix, smooth_series
 
 
 class PipelineModularizationTests(unittest.TestCase):
@@ -102,6 +102,14 @@ class PipelineModularizationTests(unittest.TestCase):
         mat = np.arange(9, dtype=float).reshape(3, 3)
         self.assertEqual(smooth_series(series).shape, series.shape)
         self.assertEqual(smooth_matrix(mat).shape, mat.shape)
+
+    def test_overflow_bucket_display_clips_last_bucket(self) -> None:
+        values = np.array([8.0, 11.0, 9.0, 62.0], dtype=float)
+        display, x_cap, clipped = overflow_bucket_display(values, overflow_index=3, pad_ratio=1.10)
+        self.assertTrue(clipped)
+        self.assertAlmostEqual(x_cap, 12.1)
+        np.testing.assert_allclose(display[:3], values[:3], rtol=0.0, atol=1e-12)
+        self.assertAlmostEqual(display[3], x_cap)
 
 
 if __name__ == "__main__":
