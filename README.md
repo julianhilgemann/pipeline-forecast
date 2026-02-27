@@ -153,27 +153,64 @@ This enables both:
 ## Repository Structure
 
 - [`pipeline_forecast.py`](/Users/admin/Desktop/pipeline-forecast/pipeline_forecast.py)
-  End-to-end synthetic generation, DuckDB write, forecasting, evaluation, and exports.
+  Thin CLI entrypoint for end-to-end synthetic generation, DuckDB write, forecasting, evaluation, and exports.
 - [`model_overview_figure.py`](/Users/admin/Desktop/pipeline-forecast/model_overview_figure.py)
-  Multi-panel architecture figure from exported forecast tables.
+  Thin CLI entrypoint for the multi-panel architecture figure.
+- [`pipeline_lib/`](/Users/admin/Desktop/pipeline-forecast/pipeline_lib)
+  Modular forecast library (calendar, simulation, warehouse SQL, modeling, forecasting, plotting, and overview figure modules).
+- [`tests/test_pipeline_modularization.py`](/Users/admin/Desktop/pipeline-forecast/tests/test_pipeline_modularization.py)
+  Regression and integration tests for modularized transforms and output generation.
+- [`scripts/`](/Users/admin/Desktop/pipeline-forecast/scripts)
+  Cross-platform helpers for creating and using a repo-local virtual environment.
 - [`outputs/`](/Users/admin/Desktop/pipeline-forecast/outputs)
   Generated DuckDB, CSVs, and figures.
 
-## Run
+## Quick Start (Self-Contained venv)
 
-Install dependencies:
+Use Python 3.11+ and a repo-local virtual environment (`.venv`).
+
+### macOS / Linux
+
+1. Create/update `.venv` and install dependencies:
 ```bash
-pip install -r requirements.txt
+./scripts/bootstrap_venv.sh
 ```
 
-1. Generate data + forecast outputs:
+2. Generate data + forecast outputs:
 ```bash
-python pipeline_forecast.py
+./scripts/bootstrap_venv.sh pipeline_forecast.py
 ```
 
-2. Render architecture figure:
+3. Render architecture figure:
 ```bash
-python model_overview_figure.py --output-dir outputs
+./scripts/bootstrap_venv.sh model_overview_figure.py --output-dir outputs
+```
+
+4. Run tests:
+```bash
+./scripts/bootstrap_venv.sh -m unittest discover -s tests -v
+```
+
+### Windows (PowerShell)
+
+1. Create/update `.venv` and install dependencies:
+```powershell
+.\scripts\bootstrap_venv.ps1
+```
+
+2. Generate data + forecast outputs:
+```powershell
+.\scripts\bootstrap_venv.ps1 pipeline_forecast.py
+```
+
+3. Render architecture figure:
+```powershell
+.\scripts\bootstrap_venv.ps1 model_overview_figure.py --output-dir outputs
+```
+
+4. Run tests:
+```powershell
+.\scripts\bootstrap_venv.ps1 -m unittest discover -s tests -v
 ```
 
 ## Roadmap / Next Steps
