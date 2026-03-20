@@ -40,11 +40,18 @@ Virtual environment ready: $VENV_DIR
 Activate it:
   source "$VENV_DIR/bin/activate"
 
+Run the interactive dashboard:
+  ./scripts/bootstrap_venv.sh --app
+
 Run a Python command inside the venv:
   ./scripts/bootstrap_venv.sh pipeline_forecast.py
   ./scripts/bootstrap_venv.sh -m unittest discover -s tests -v
 EOF
   exit 0
+fi
+
+if [[ "${1:-}" == "--app" ]]; then
+  exec "$VENV_DIR/bin/streamlit" run "$ROOT_DIR/app.py"
 fi
 
 exec "$VENV_PYTHON" "$@"
